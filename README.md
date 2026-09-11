@@ -1,6 +1,6 @@
 # gui-now
 
-The official SDK for [gui.now](https://gui.now) — instant shareable HTML canvases via API.
+The official SDK for [GUI](https://gui.now) — instant shareable HTML canvases via API.
 
 HTML in, URL out. Every canvas gets real-time input sync, state persistence, and a built-in component library.
 
@@ -141,13 +141,13 @@ Every canvas gets 8 auto-injected components. Use them in HTML or Markdown:
 | Edits | 3 | Unlimited |
 | Rate | 5/hr | 100/hr |
 | Password | — | ✓ |
-| Watermark | gui.now badge | None |
+| Watermark | GUI badge | None |
 
 Free tier: no account or API key needed.
 
 ## Links
 
-- [gui.now](https://gui.now)
+- [GUI](https://gui.now)
 - [API Docs](https://gui.now/docs)
 - [Pro](https://gui.now/pro)
 - [Agent Skill](https://github.com/gui-now/skills) — `npx skills add gui-now/skills --skill gui-now -g`
