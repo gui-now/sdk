@@ -1,4 +1,4 @@
-# gui-now
+# gui-now-sdk
 
 The official SDK for [GUI](https://gui.now) — instant shareable HTML canvases via API.
 
@@ -7,13 +7,13 @@ HTML in, URL out. Every canvas gets real-time input sync, state persistence, and
 ## Install
 
 ```bash
-npm install gui-now
+npm install gui-now-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { createGui } from 'gui-now'
+import { createGui } from 'gui-now-sdk'
 
 const gui = createGui()
 
