@@ -24,6 +24,10 @@ const canvas = await gui.create({
 })
 console.log(canvas.url) // https://gui.now/abc123xyz
 
+// Made without an account? Show this link to the person: it lets them sign in
+// and keep the page in their library (works once).
+if (canvas.claim_url) console.log(canvas.claim_url)
+
 // Markdown canvas
 const doc = await gui.create({
   markdown: '# Report\n\nShipped **3 features** this sprint.',
@@ -44,7 +48,7 @@ const gui = createGui({ apiKey: 'YOUR_PRO_KEY' })
 
 const canvas = await gui.create({
   html: '<h1>Pro Canvas</h1>',
-  expires: '14d',         // up to 30 days
+  expires: 'never',       // Pro pages never expire by default; any duration works
   password: 'team2026'    // password protection
 })
 ```
@@ -58,7 +62,8 @@ Create a client instance.
 ```typescript
 const gui = createGui({
   baseUrl: 'https://gui.now',  // default
-  apiKey: 'YOUR_PRO_KEY'       // optional
+  apiKey: 'YOUR_PRO_KEY',      // optional
+  agent: 'Claude Code'         // optional: shown next to the page in the owner's library
 })
 ```
 
@@ -72,11 +77,23 @@ Create a new canvas.
 | `markdown` | string | Markdown (alternative to html) |
 | `title` | string | Display name |
 | `theme` | `'dark'` \| `'light'` | Theme for markdown |
-| `expires` | string | Pro: `'1h'` `'24h'` `'7d'` `'14d'` `'30d'` |
+| `expires` | string | `'30m'`, `'24h'`, `'7d'`... or `'never'`. Default and max depend on who's publishing (below) |
 | `password` | string | Pro: password-protect |
 | `frames` | array | Multi-tab: `[{html, label}]` |
+| `agent` | string | Agent name shown in the owner's library, e.g. `'Claude Code'` |
 
-Returns: `{ id, url, edit_token, expires_at, pro, format }`
+Returns: `{ id, url, edit_token, expires_at, expires_clamped?, claim_url?, owned?, pro, format }`
+
+| Publishing as | Default expiry | Longest |
+|---|---|---|
+| No account, no key | 24h | 72h |
+| Signed-in free account | 72h | 7d |
+| Pro key | never | no limit |
+
+Asking for more than your tier allows isn't an error: the page gets the longest
+allowed expiry and the response has `expires_clamped: true`. `expires_at` is
+`null` when the page never expires. `claim_url` comes back for pages made
+without an account or key; pass it on to the person you made the page for.
 
 ### `gui.createDiagram(mermaid, options?)`
 
@@ -98,13 +115,26 @@ await gui.update(canvas.id, canvas.edit_token, {
 
 Free: 3 edits. Pro: unlimited.
 
-### `gui.extend(id)`
+### `gui.extend(id, options?)`
 
-Extend canvas expiry by 24 hours.
+Push a page's expiry forward.
 
 ```typescript
+// +24h. Pages without an owner stop at 72h after they were made.
 await gui.extend(canvas.id)
+
+// A specific expiry, measured from now and clamped to the page's tier
+await gui.extend(canvas.id, { editToken: canvas.edit_token, expires: '72h' })
 ```
+
+Pages in someone's library need the edit token (or the owner signed in on
+gui.now). Once an unowned page reaches its 72h ceiling, `extend` throws a
+`GuiError` with `status` 409 and `maxExpiresAt`.
+
+### Errors
+
+Every failed call throws a `GuiError` (a subclass of `Error`) with the HTTP
+`status` and the response `body`.
 
 ### `gui.subscribe(id, callback)`
 
