@@ -6,7 +6,7 @@
     "README.md",
     "LICENSE"
   ],
-  "description": "SDK for gui.now \u2014 instant shareable HTML canvases",
+  "description": "SDK for gui.now — instant shareable HTML canvases",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -19,6 +19,8 @@
   },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
+    "test": "node --test test/",
+    "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
