@@ -92,3 +92,9 @@ test('ids are URL-encoded', async () => {
   await gui.extend('a/b')
   assert.equal(calls[0].url, 'http://x/api/canvas/a%2Fb/extend')
 })
+
+test('extend with expires but no editToken fails before calling the API', async () => {
+  const gui = createGui({ baseUrl: 'http://x' })
+  await assert.rejects(gui.extend('abc', { expires: '7d' }), /pass editToken/)
+  assert.equal(calls.length, 0)
+})

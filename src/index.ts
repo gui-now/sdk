@@ -166,6 +166,10 @@ export function createGui(config: GuiConfig = {}) {
      * `expires`, clamped to the page's tier max.
      */
     async extend(id: string, options: ExtendOptions = {}): Promise<ExtendResult> {
+      // The API ignores `expires` without auth and just adds 24h; say so here.
+      if (options.expires !== undefined && !options.editToken) {
+        throw new Error('extend: pass editToken to choose an expiry; without it extend adds 24h')
+      }
       const extra: Record<string, string> = {}
       if (options.editToken) extra.Authorization = `Bearer ${options.editToken}`
       const res = await fetch(`${base}/api/canvas/${encodeURIComponent(id)}/extend`, {
