@@ -44,7 +44,7 @@ export interface UpdateOptions {
   markdown?: string
   /** Replace the page body with a Mermaid diagram. */
   mermaid?: string
-  /** Theme for the markdown or mermaid you send; ignored otherwise. */
+  /** Theme for the markdown or mermaid you send. Leave it out to follow the viewer's setting. */
   theme?: 'dark' | 'light'
   /** New title. null clears it. */
   title?: string | null
