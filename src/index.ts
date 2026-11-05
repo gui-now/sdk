@@ -32,12 +32,45 @@ export interface CreateOptions {
   agent?: string
 }
 
+/**
+ * What to change on a page. Send at most one of html, markdown or mermaid per
+ * update; fields you leave out keep their current value (password and expiry
+ * included).
+ */
 export interface UpdateOptions {
+  /** Replace the page body with raw HTML. */
   html?: string
-  title?: string
-  frames?: { html: string; label?: string }[]
+  /** Replace the page body with Markdown, rendered the same way as on create. */
+  markdown?: string
+  /** Replace the page body with a Mermaid diagram. */
+  mermaid?: string
+  /** Theme for the markdown or mermaid you send. Leave it out to follow the viewer's setting. */
+  theme?: 'dark' | 'light'
+  /** New title. null clears it. */
+  title?: string | null
+  /** Multi-tab views. null removes them. */
+  frames?: { html: string; label?: string }[] | null
   /** Set or remove password (Pro only). null to remove. */
   password?: string | null
+}
+
+export interface UpdateResult {
+  id: string
+  updated: boolean
+  /** Fields this update actually changed, e.g. ["html", "title"]. */
+  changed: string[]
+  /** Fields in the request that the API didn't apply, e.g. ["expires"]. */
+  ignored?: string[]
+  /** "markdown", "mermaid", "components" or "html" when the body changed format. */
+  format?: string
+  /**
+   * Fingerprint of what the page now serves ("sha256:<hex>"). /embed/<id>
+   * sends the same value as X-Content-Hash, so you can confirm what's live.
+   */
+  content_hash: string
+  edit_count?: number
+  /** Free pages only: edits left. */
+  edits_remaining?: number
 }
 
 export interface ExtendOptions {
@@ -69,6 +102,8 @@ export interface Canvas {
   password_protected?: boolean
   pro?: boolean
   format?: string
+  /** Fingerprint of what the page serves; see UpdateResult.content_hash. */
+  content_hash?: string
 }
 
 export interface ExtendResult {
@@ -150,13 +185,18 @@ export function createGui(config: GuiConfig = {}) {
       return check<Canvas>(res)
     },
 
-    async update(id: string, editToken: string, options: UpdateOptions): Promise<{ id: string; updated: boolean; edit_count?: number; edits_remaining?: number }> {
+    /**
+     * Change a page's body, title, frames or password. Send markdown or
+     * mermaid to replace the body in that format. The result lists what
+     * changed and carries the new content_hash.
+     */
+    async update(id: string, editToken: string, options: UpdateOptions): Promise<UpdateResult> {
       const res = await fetch(`${base}/api/canvas/${encodeURIComponent(id)}`, {
         method: 'PUT',
         headers: headers({ Authorization: `Bearer ${editToken}` }),
         body: JSON.stringify(options),
       })
-      return check(res)
+      return check<UpdateResult>(res)
     },
 
     /**

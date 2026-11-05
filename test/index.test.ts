@@ -98,3 +98,57 @@ test('extend with expires but no editToken fails before calling the API', async 
   await assert.rejects(gui.extend('abc', { expires: '7d' }), /pass editToken/)
   assert.equal(calls.length, 0)
 })
+
+test('update sends markdown with theme and returns changed and content_hash', async () => {
+  reply = () =>
+    Response.json({
+      id: 'abc',
+      updated: true,
+      changed: ['html', 'title'],
+      format: 'markdown',
+      content_hash: 'sha256:abc123',
+      edit_count: 2,
+      edits_remaining: 1,
+    })
+  const gui = createGui({ baseUrl: 'http://x' })
+  const r = await gui.update('abc', 'tok', { markdown: '# Hi', theme: 'light', title: 'Notes' })
+  assert.equal(calls[0].url, 'http://x/api/canvas/abc')
+  assert.equal(calls[0].init.method, 'PUT')
+  assert.equal(hdr(calls[0]).Authorization, 'Bearer tok')
+  assert.deepEqual(JSON.parse(calls[0].init.body as string), { markdown: '# Hi', theme: 'light', title: 'Notes' })
+  assert.deepEqual(r.changed, ['html', 'title'])
+  assert.equal(r.format, 'markdown')
+  assert.equal(r.content_hash, 'sha256:abc123')
+  assert.equal(r.edits_remaining, 1)
+})
+
+test('update passes mermaid, frames null and reports ignored fields', async () => {
+  reply = () =>
+    Response.json({ id: 'abc', updated: true, changed: ['html', 'frames'], ignored: ['expires'], content_hash: 'sha256:1' })
+  const gui = createGui({ baseUrl: 'http://x' })
+  const r = await gui.update('abc', 'tok', { mermaid: 'graph TD\n  A-->B', frames: null })
+  assert.deepEqual(JSON.parse(calls[0].init.body as string), { mermaid: 'graph TD\n  A-->B', frames: null })
+  assert.deepEqual(r.ignored, ['expires'])
+})
+
+test('update with two bodies surfaces the API 400 as a GuiError', async () => {
+  reply = () => Response.json({ error: 'Send one of html, markdown or mermaid per update, not html and markdown.' }, { status: 400 })
+  const gui = createGui({ baseUrl: 'http://x' })
+  await assert.rejects(gui.update('abc', 'tok', { html: '<p>a</p>', markdown: '# a' }), (e: unknown) => {
+    assert.ok(e instanceof GuiError)
+    assert.equal(e.status, 400)
+    assert.match(e.message, /one of html, markdown or mermaid/)
+    return true
+  })
+})
+
+test('create returns content_hash', async () => {
+  reply = () =>
+    Response.json(
+      { id: 'abc', url: 'https://gui.now/abc', edit_token: 't', expires_at: null, content_hash: 'sha256:ff' },
+      { status: 201 }
+    )
+  const gui = createGui({ baseUrl: 'http://x' })
+  const c = await gui.create({ markdown: '# Hi' })
+  assert.equal(c.content_hash, 'sha256:ff')
+})
