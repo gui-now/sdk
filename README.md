@@ -105,15 +105,26 @@ const { url } = await gui.createDiagram('graph TD\n  A-->B')
 
 ### `gui.update(id, editToken, options)`
 
-Update a canvas. All viewers see changes in real-time.
+Update a canvas. All viewers see changes in real-time. Send one of `html`,
+`markdown` or `mermaid` to replace the body; anything you leave out, password
+and expiry included, stays as it is.
 
 ```typescript
 await gui.update(canvas.id, canvas.edit_token, {
   html: '<h1>Updated!</h1>'
 })
+
+// Replace the body with Markdown and check what went live
+const r = await gui.update(canvas.id, canvas.edit_token, {
+  markdown: '# Release notes\n\n- Faster sync',
+  theme: 'light',
+})
+r.changed       // ['html']
+r.content_hash  // 'sha256:…', same as X-Content-Hash on /embed/<id>
 ```
 
-Free: 3 edits. Pro: unlimited.
+`ignored` lists any fields the API didn't apply. To change when a page
+expires, use `extend`. Free: 3 edits. Pro: unlimited.
 
 ### `gui.extend(id, options?)`
 
